@@ -91,7 +91,7 @@ func runEntryPointCov80(t *testing.T, setup func(home, configDir string), args .
 func writeStoresYmlCov80(t *testing.T, configDir, name, location string) {
 	t.Helper()
 	require.NoError(t, os.MkdirAll(configDir, 0700))
-	// The config loader (utils.LoadConfig) reads sources.yml + destinations.yml
+	// The config loader (config.Load) reads sources.yml + destinations.yml
 	// + stores.yml; if any is missing it falls back to the legacy single-file
 	// format and ignores stores.yml. Write all three so our store is honoured.
 	require.NoError(t, os.WriteFile(filepath.Join(configDir, "sources.yml"),

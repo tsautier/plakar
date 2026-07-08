@@ -2,12 +2,10 @@ package utils
 
 import (
 	"bytes"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/PlakarKorp/plakar/config"
 	"github.com/stretchr/testify/require"
 )
 
@@ -96,73 +94,6 @@ func TestValidateEmailOK2(t *testing.T) {
 	got, err := ValidateEmail("bob@example.com")
 	require.NoError(t, err)
 	require.Equal(t, "bob@example.com", got)
-}
-
-// --- config.go: GetConf via JSON branch ----------------------------------
-
-func TestGetConfJSONBranch2(t *testing.T) {
-	// invalid YAML mapping but valid JSON -> exercises the JSON fallback path
-	rd := strings.NewReader(`{"remote":{"location":"fs:///x","port":"22"}}`)
-	got, err := GetConf(rd, "")
-	require.NoError(t, err)
-	require.Equal(t, "fs:///x", got["remote"]["location"])
-	require.Equal(t, "22", got["remote"]["port"])
-}
-
-func TestGetConfUnparseable2(t *testing.T) {
-	rd := strings.NewReader("\x00\x01 not yaml not json not ini = = =")
-	_, err := GetConf(rd, "")
-	require.Error(t, err)
-}
-
-func TestGetConfThirdPartyEmptyValueStripped2(t *testing.T) {
-	// third-party rewriting skips empty values entirely
-	rd := strings.NewReader("remote:\n  host: example.com\n  blank: \"\"\n")
-	got, err := GetConf(rd, "s3")
-	require.NoError(t, err)
-	require.Equal(t, "s3://", got["remote"]["location"])
-	require.Equal(t, "example.com", got["remote"]["s3_host"])
-	_, has := got["remote"]["s3_blank"]
-	require.False(t, has)
-}
-
-// --- config.go: Save error path (path is a file, not a dir) --------------
-
-func TestSaveConfigPathIsFile2(t *testing.T) {
-	f := filepath.Join(t.TempDir(), "afile")
-	require.NoError(t, os.WriteFile(f, []byte("x"), 0o600))
-	cfg := config.NewConfig()
-	// MkdirAll on a path that is an existing file fails.
-	err := SaveConfig(f, cfg)
-	require.Error(t, err)
-}
-
-// --- config.go: load destinations parse error ----------------------------
-
-func TestLoadConfigDestinationsParseError2(t *testing.T) {
-	dir := t.TempDir()
-	must := func(name, body string) {
-		require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(body), 0o600))
-	}
-	must("sources.yml", "version: v1.0.0\nsources: {}\n")
-	// destinations.yml present but unparseable in both new and old format
-	must("destinations.yml", "version: v1.0.0\ndestinations: [this, is, a, list]\n")
-	_, err := LoadConfig(dir)
-	require.Error(t, err)
-}
-
-// --- config.go: load stores parse error ----------------------------------
-
-func TestLoadConfigStoresParseError2(t *testing.T) {
-	dir := t.TempDir()
-	must := func(name, body string) {
-		require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(body), 0o600))
-	}
-	must("sources.yml", "version: v1.0.0\nsources: {}\n")
-	must("destinations.yml", "version: v1.0.0\ndestinations: {}\n")
-	must("stores.yml", "- not\n- a\n- map\n")
-	_, err := LoadConfig(dir)
-	require.Error(t, err)
 }
 
 // --- config_policy.go: SaveToFile + LoadPolicyConfigFile round trip ------

@@ -4,11 +4,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/PlakarKorp/kloset/locate"
-	"github.com/PlakarKorp/plakar/config"
 	"github.com/stretchr/testify/require"
 )
 
@@ -62,52 +60,6 @@ func TestShouldCheckUpdateDevelEarlyReturnCov80(t *testing.T) {
 	// No cookie should have been created since we returned before touching disk.
 	_, err := os.Stat(filepath.Join(dir, "last-update-check"))
 	require.True(t, os.IsNotExist(err))
-}
-
-// LoadFallback should propagate the error from LoadOldConfigIfExists when the
-// legacy plakar.yml is malformed.
-func TestLoadFallbackOldConfigParseErrorCov80(t *testing.T) {
-	dir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "plakar.yml"), []byte("default-repo: [unterminated"), 0644))
-	cl := newConfigHandler(dir)
-	_, err := cl.LoadFallback()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "error reading file")
-}
-
-// Save should fail when MkdirAll cannot create the target directory.
-func TestSaveMkdirErrorCov80(t *testing.T) {
-	base := t.TempDir()
-	filePath := filepath.Join(base, "regular")
-	require.NoError(t, os.WriteFile(filePath, []byte("x"), 0644))
-	cl := newConfigHandler(filepath.Join(filePath, "sub"))
-	err := cl.Save(config.NewConfig())
-	require.Error(t, err)
-}
-
-// GetConf with a third-party prefix must rewrite each key with the prefix and
-// add a synthetic location. Verify the rewrite path and that the "ignore"
-// bookkeeping is exercised with multiple keys.
-func TestGetConfThirdPartyMultiKeyCov80(t *testing.T) {
-	in := "section1:\n  host: example.com\n  user: bob\n"
-	out, err := GetConf(strings.NewReader(in), "myremote")
-	require.NoError(t, err)
-	sec := out["section1"]
-	require.Equal(t, "myremote://", sec["location"])
-	require.Equal(t, "example.com", sec["myremote_host"])
-	require.Equal(t, "bob", sec["myremote_user"])
-	// original keys must be gone
-	_, hasHost := sec["host"]
-	require.False(t, hasHost)
-}
-
-// GetConf must error when no location can be found and no third-party prefix is
-// given.
-func TestGetConfMissingLocationCov80(t *testing.T) {
-	in := "section1:\n  host: example.com\n"
-	_, err := GetConf(strings.NewReader(in), "")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "missing 'location' key")
 }
 
 // Set on a *time.Time field with an invalid value must surface an error
