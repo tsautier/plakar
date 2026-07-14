@@ -11,14 +11,14 @@ import (
 	_ "github.com/PlakarKorp/integrations/fs/importer"
 	_ "github.com/PlakarKorp/integrations/fs/storage"
 	"github.com/PlakarKorp/plakar/appcontext"
-	"github.com/PlakarKorp/plakar/utils"
+	"github.com/PlakarKorp/plakar/config"
 	"github.com/stretchr/testify/require"
 )
 
 func cov80Ctx(t *testing.T) (*appcontext.AppContext, *bytes.Buffer, *bytes.Buffer) {
 	t.Helper()
 	tmpDir := t.TempDir()
-	cfg, err := utils.LoadOldConfigIfExists(filepath.Join(tmpDir, "config.yaml"))
+	cfg, err := config.LoadOldConfigIfExists(filepath.Join(tmpDir, "config.yaml"))
 	require.NoError(t, err)
 	bufOut := bytes.NewBuffer(nil)
 	bufErr := bytes.NewBuffer(nil)
