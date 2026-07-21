@@ -59,6 +59,7 @@ type Ptar struct {
 	SyncTargets   listFlag
 	SyncSecrets   [][]byte
 	BackupTargets listFlag
+	Excludes      []string
 }
 
 func init() {
@@ -81,6 +82,9 @@ func (l *listFlag) Set(value string) error {
 
 func (cmd *Ptar) Parse(ctx *appcontext.AppContext, args []string) error {
 	cmd.KlosetUUID = uuid.Must(uuid.NewRandom())
+	var optIgnoreFiles listFlag
+	var optIgnore listFlag
+	excludes := []string{}
 
 	flags := flag.NewFlagSet("ptar", flag.ExitOnError)
 	flags.Usage = func() {
@@ -95,6 +99,8 @@ func (cmd *Ptar) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.BoolVar(&cmd.Overwrite, "overwrite", false, "overwrite the ptar archive if it already exists")
 	flags.Var(&cmd.SyncTargets, "k", "add a kloset location to include in the ptar archive (can be specified multiple times)")
 	flags.Var(&cmd.SyncTargets, "kloset", "add a kloset location to include in the ptar archive (can be specified multiple times)")
+	flags.Var(&optIgnoreFiles, "ignore-file", "path to a file containing newline-separated gitignore patterns, treated as -ignore; can be specified multiple times")
+	flags.Var(&optIgnore, "ignore", "gitignore pattern to exclude files, can be specified multiple times to add several exclusion patterns")
 	flags.StringVar(&cmd.KlosetPath, "o", "", "name of the ptar archive to create")
 	flags.Parse(args)
 
@@ -110,6 +116,17 @@ func (cmd *Ptar) Parse(ctx *appcontext.AppContext, args []string) error {
 		cmd.BackupTargets = make([]string, len(flags.Args()))
 		copy(cmd.BackupTargets, flags.Args())
 	}
+
+	for _, ignoreFile := range optIgnoreFiles {
+		lines, err := utils.LoadIgnoreFile(ignoreFile)
+		if err != nil {
+			return err
+		}
+		excludes = append(excludes, lines...)
+	}
+
+	excludes = append(excludes, optIgnore...)
+	cmd.Excludes = excludes
 
 	for _, syncTarget := range cmd.SyncTargets {
 		var peerSecret []byte
@@ -347,7 +364,9 @@ func (cmd *Ptar) backup(ctx *appcontext.AppContext, repo *repository.RepositoryW
 			opts = remote
 		}
 
-		imp, err := importer.NewImporter(ctx.GetInner(), ctx.ImporterOpts(), opts)
+		importerOpts := ctx.ImporterOpts()
+		importerOpts.Excludes = cmd.Excludes
+		imp, err := importer.NewImporter(ctx.GetInner(), importerOpts, opts)
 		if err != nil {
 			return err
 		}
@@ -359,6 +378,10 @@ func (cmd *Ptar) backup(ctx *appcontext.AppContext, repo *repository.RepositoryW
 
 		source, err := snapshot.NewSource(ctx, imp)
 		if err != nil {
+			return err
+		}
+
+		if err := source.SetExcludes(cmd.Excludes); err != nil {
 			return err
 		}
 

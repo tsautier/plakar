@@ -9,6 +9,8 @@ PLAKAR-PTAR(1) - General Commands Manual
 **plakar&nbsp;ptar**
 \[**-plaintext**]
 \[**-overwrite**]
+\[**-ignore**&nbsp;*pattern*]
+\[**-ignore-file**&nbsp;*file*]
 \[**-k**&nbsp;*location*]
 **-o**&nbsp;*file.ptar*
 \[*path&nbsp;...*]
@@ -58,6 +60,19 @@ The options are as follows:
 > Overwrite an existing
 > *.ptar*
 > file at the destination path.
+
+**-ignore** *pattern*
+
+> Exclude files matching a gitignore-style pattern while backing up filesystem
+> paths into the archive.
+> May be specified multiple times.
+
+**-ignore-file** *file*
+
+> Read newline-separated gitignore-style patterns from
+> *file*.
+> Blank lines and comments are ignored.
+> May be specified multiple times.
 
 **-k** *location*, **-kloset** *location*
 
