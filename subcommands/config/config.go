@@ -36,6 +36,11 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+const (
+	configNamePathSeparator     = "/"
+	invalidConfigurationNameFmt = "invalid configuration name %q: names cannot contain %q"
+)
+
 func init() {
 	subcommands.Register(func() subcommands.Subcommand { return &ConfigStoreCmd{} },
 		subcommands.BeforeRepositoryOpen, "store")
@@ -49,6 +54,13 @@ func init() {
 
 func normalizeName(name string) string {
 	return strings.TrimPrefix(name, "@")
+}
+
+func validateConfigName(name string) error {
+	if strings.Contains(name, configNamePathSeparator) {
+		return fmt.Errorf(invalidConfigurationNameFmt, name, configNamePathSeparator)
+	}
+	return nil
 }
 
 func normalizeLocation(location string) string {
@@ -98,6 +110,9 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		}
 
 		name, location := normalizeName(args[0]), normalizeLocation(args[1])
+		if err := validateConfigName(name); err != nil {
+			return err
+		}
 
 		if hasFunc(name) {
 			return fmt.Errorf("%s %q already exists", cmd, name)
