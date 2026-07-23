@@ -201,21 +201,6 @@ func TestBackupIgnoreFileMissing(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestLoadIgnoreFile(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "ignores")
-	content := "# header\n\npat1\npat2\n  \t\n  \t# leading-space comment is NOT stripped\n"
-	require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
-	lines, err := LoadIgnoreFile(path)
-	require.NoError(t, err)
-	require.Equal(t, []string{"pat1", "pat2", "  \t# leading-space comment is NOT stripped"}, lines)
-}
-
-func TestLoadIgnoreFileMissing(t *testing.T) {
-	_, err := LoadIgnoreFile("/no/such/file")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "unable to open")
-}
-
 func TestBackupPreHookFailureAbortsBackup(t *testing.T) {
 	bufOut := bytes.NewBuffer(nil)
 	bufErr := bytes.NewBuffer(nil)

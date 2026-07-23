@@ -455,10 +455,6 @@ func (cmd *Backup) DoBackup(ctx *appcontext.AppContext, repo *repository.Reposit
 	return 0, nil, snap.Header.Identifier, warning
 }
 
-func LoadIgnoreFile(filename string) ([]string, error) {
-	return utils.LoadIgnoreFile(filename)
-}
-
 func executeHook(ctx *appcontext.AppContext, hook string) error {
 	if hook == "" {
 		return nil
