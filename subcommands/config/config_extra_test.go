@@ -138,6 +138,23 @@ func TestDispatchAddDuplicateAndMalformed(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestDispatchAddRejectsNameWithSlash(t *testing.T) {
+	const (
+		configCommand     = "destination"
+		configSubcommand  = "add"
+		invalidConfigName = "s3://xxxx"
+		configLocation    = "access_key=yyy"
+		expectedError     = "invalid configuration name"
+	)
+
+	ctx, _, _ := newConfigCtx(t)
+
+	err := dispatchSubcommand(ctx, configCommand, configSubcommand, []string{invalidConfigName, configLocation})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), expectedError)
+	require.False(t, ctx.Config.HasDestination(invalidConfigName))
+}
+
 func TestDispatchAddWithOptions(t *testing.T) {
 	ctx, _, _ := newConfigCtx(t)
 	require.NoError(t, dispatchSubcommand(ctx, "store", "add", []string{"r", "fs:/tmp/r", "key=val", "k2=v2"}))
