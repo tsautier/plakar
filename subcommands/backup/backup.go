@@ -17,7 +17,6 @@
 package backup
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"maps"
@@ -149,7 +148,7 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 	}
 
 	for _, ignoreFile := range opt_ignore_files {
-		lines, err := LoadIgnoreFile(ignoreFile)
+		lines, err := utils.LoadIgnoreFile(ignoreFile)
 		if err != nil {
 			return err
 		}
@@ -454,31 +453,6 @@ func (cmd *Backup) DoBackup(ctx *appcontext.AppContext, repo *repository.Reposit
 		warning = fmt.Errorf("%d errors during backup", totalErrors)
 	}
 	return 0, nil, snap.Header.Identifier, warning
-}
-
-func LoadIgnoreFile(filename string) ([]string, error) {
-	fp, err := os.Open(filename)
-	if err != nil {
-		return nil, fmt.Errorf("unable to open excludes file: %w", err)
-	}
-	defer fp.Close()
-
-	var lines []string
-	scanner := bufio.NewScanner(fp)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "#") {
-			continue
-		}
-		if strings.Trim(line, " \t\r") == "" {
-			continue
-		}
-		lines = append(lines, line)
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return lines, nil
 }
 
 func executeHook(ctx *appcontext.AppContext, hook string) error {
