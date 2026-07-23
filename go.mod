@@ -13,7 +13,7 @@ require (
 	github.com/PlakarKorp/kloset v1.2.0-alpha.2.0.20260616212757-90a8f211d1fe
 	github.com/PlakarKorp/pkg v1.1.2
 	github.com/alecthomas/chroma v0.10.0
-	github.com/anacrolix/fuse v0.3.2
+	github.com/anacrolix/fuse v0.3.3-0.20260723023734-9e1272bc0085
 	github.com/charmbracelet/bubbles v1.0.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/glamour v1.0.0
